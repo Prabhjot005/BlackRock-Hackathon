@@ -1,10 +1,8 @@
 package com.example.demo.controllers;
 
 import com.example.demo.common.models.ResponseDTO;
-import com.example.demo.models.TransactionValidatorRequest;
+import com.example.demo.models.*;
 import com.example.demo.common.utils.ResponseUtil;
-import com.example.demo.models.ExpenseModel;
-import com.example.demo.models.TransactionValidatorResponse;
 import com.example.demo.services.TransactionService;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +65,35 @@ public class TransactionController {
                 );
             } else {
                 throw new BadRequestException("Invalid wage or transactions");
+            }
+
+        }
+        catch (BadRequestException e){
+            return ResponseUtil.sendErrorResponse("VALIDATETRANSACTION400", "Bad Request for Validate transactions", landingTime, HttpStatus.BAD_REQUEST, 400);
+        }
+        catch (Exception e){
+            return ResponseUtil.sendErrorResponse("VALIDATETRANSACTION500", "Exception Occured in validating transactions", landingTime, HttpStatus.INTERNAL_SERVER_ERROR, 500);
+        }
+    }
+
+    @PostMapping("/v1/transactions:filter")
+    public ResponseEntity<ResponseDTO> filterTransactions(@RequestBody TransactionFilterRequest request) throws Exception {
+        String endPoint = "/v1/transactions:filter";
+        Timestamp landingTime = Timestamp.valueOf(LocalDateTime.now());
+        // Authorize here
+        try {
+            if (request.getWage() != null && request.getTransactions() != null && request.getK() != null) {
+                TransactionFilterResponse response = transactionService.filterTransactions(request.getWage(), request.getTransactions(), request.getQ(), request.getP(), request.getK(), endPoint);
+                return ResponseUtil.sendResponse(
+                        response,
+                        Timestamp.valueOf(LocalDateTime.now()),
+                        HttpStatus.OK,
+                        STATUS_200,
+                        SUCCESSFULLY,
+                        endPoint
+                );
+            } else {
+                throw new BadRequestException("Invalid wage or transactions or K Periods");
             }
 
         }
