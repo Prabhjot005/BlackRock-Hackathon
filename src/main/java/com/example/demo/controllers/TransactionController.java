@@ -1,11 +1,11 @@
 package com.example.demo.controllers;
 
 import com.example.demo.common.models.ResponseDTO;
+import com.example.demo.models.TransactionValidatorRequest;
 import com.example.demo.common.utils.ResponseUtil;
 import com.example.demo.models.ExpenseModel;
-import com.example.demo.models.ParseTransactionRequestModel;
+import com.example.demo.models.TransactionValidatorResponse;
 import com.example.demo.services.TransactionService;
-import jakarta.servlet.http.HttpServletMapping;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +19,9 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.example.demo.common.Constants.STATUS_200;
+import static com.example.demo.common.Constants.SUCCESSFULLY;
+
 @RestController
 @RequestMapping("/blackrock/challenge")
 public class TransactionController {
@@ -30,7 +33,7 @@ public class TransactionController {
     public ResponseEntity<ResponseDTO> parseTransactions(@RequestBody List<ExpenseModel> expenses) throws Exception {
         String endPoint = "/v1/transactions:parse";
         Timestamp landingTime = Timestamp.valueOf(LocalDateTime.now());
-        // Authorize
+        // Authorize here
         try {
             if (expenses != null) {
                 return transactionService.parseTransactions(expenses, endPoint);
@@ -45,4 +48,34 @@ public class TransactionController {
             return ResponseUtil.sendErrorResponse("PARSETRANSACTION500", "Exception Occured in parsing expenses", landingTime, HttpStatus.INTERNAL_SERVER_ERROR, 500);
         }
     }
+
+    @PostMapping("/v1/transactions:validator")
+    public ResponseEntity<ResponseDTO> validateTransactions(@RequestBody TransactionValidatorRequest request) throws Exception {
+        String endPoint = "/v1/transactions:validator";
+        Timestamp landingTime = Timestamp.valueOf(LocalDateTime.now());
+        // Authorize here
+        try {
+            if (request.getWage() != null && request.getTransactions() != null) {
+                TransactionValidatorResponse response = transactionService.validateTransactions(request.getWage(), request.getTransactions(), endPoint);
+                return ResponseUtil.sendResponse(
+                        response,
+                        Timestamp.valueOf(LocalDateTime.now()),
+                        HttpStatus.OK,
+                        STATUS_200,
+                        SUCCESSFULLY,
+                        endPoint
+                );
+            } else {
+                throw new BadRequestException("Invalid wage or transactions");
+            }
+
+        }
+        catch (BadRequestException e){
+            return ResponseUtil.sendErrorResponse("VALIDATETRANSACTION400", "Bad Request for Validate transactions", landingTime, HttpStatus.BAD_REQUEST, 400);
+        }
+        catch (Exception e){
+            return ResponseUtil.sendErrorResponse("VALIDATETRANSACTION500", "Exception Occured in validating transactions", landingTime, HttpStatus.INTERNAL_SERVER_ERROR, 500);
+        }
+    }
+
 }
