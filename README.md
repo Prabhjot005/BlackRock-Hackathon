@@ -71,7 +71,6 @@ Similar to the above, calculate the tax and the interest and then find the infla
 
 TIME COMPLEXITY : 
 
-Worst Case O(n^2) if QFixedAmtList is used.
 Average Case O(n log n) 
 
 
